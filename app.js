@@ -28,7 +28,7 @@ app.post('/signup', async (req, res) => {
     });
     const validation = userSchema.validate(req.body);
     if (validation.error) {
-        return res.sendStatus(422);
+        return res.status(422).send("Todos os campos são obrigatórios!");
     }
 
     try {
@@ -36,7 +36,7 @@ app.post('/signup', async (req, res) => {
         const { email, password } = req.body;
         const verifyEmail = await db.collection('users').findOne({ email });
         if (verifyEmail) {
-            return res.sendStatus(409);
+            return res.status(409).send("E-mail já em uso. Utilize outro e-mail");
         }
         //criptografar a senha e enviar para o db
         const encryptedPassword = bcrypt.hashSync(password, 10);
