@@ -4,6 +4,7 @@ import { MongoClient, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
 import joi from 'joi';
 import bcrypt from 'bcrypt';
+import { v4 as uuid } from 'uuid';
 
 dotenv.config();
 
@@ -43,6 +44,33 @@ app.post('/signup', async (req, res) => {
         await db.collection('users').insertOne({ ...req.body, password: encryptedPassword });
         res.sendStatus(201);
 
+    } catch (error) {
+        res.status(500).send(error);
+    }
+});
+
+app.post('/signin', async (req, res) => {
+    //validação do formato do objeto vindo do body
+    const userSchema = joi.object({
+        email: joi.string().email().required(),
+        password: joi.string().required()
+    });
+    const validation = userSchema.validate(req.body);
+    if (validation.error) {
+        return res.status(422).send("Todos os campos são obrigatórios!");
+    }
+
+    try {
+        const { email, password } = req.body;
+        const user = await db.collection('users').findOne({ email });
+        //verificação email e senha, criação do token e armazenar sessão
+        if (user && bcrypt.compareSync(password, user.password)) {
+            const token = uuid();
+            await db.collection('sessions').insertOne({ userId: user._id, token});
+            return res.status(201).send(token);
+        } else {
+            return res.status(401).send("E-mail ou senha incorretos!");
+        }
     } catch (error) {
         res.status(500).send(error);
     }
