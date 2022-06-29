@@ -66,7 +66,7 @@ app.post('/signin', async (req, res) => {
         //verificação email e senha, criação do token e armazenar sessão
         if (user && bcrypt.compareSync(password, user.password)) {
             const token = uuid();
-            await db.collection('sessions').insertOne({ userId: user._id, token});
+            await db.collection('sessions').insertOne({ userId: user._id, token });
             return res.status(201).send(token);
         } else {
             return res.status(401).send("E-mail ou senha incorretos!");
@@ -76,6 +76,29 @@ app.post('/signin', async (req, res) => {
     }
 });
 
+app.get('/registers', async (req, res) => {
+    try {
+        const { authorization } = req.headers;
+        const token = authorization?.replace('Bearer ', '');
+
+        const session = await db.collection('sessions').findOne({ token });
+        if (!session) {
+            return res.status(401).send("Houve algum problema session");
+        }
+
+        const userId = session.userId;
+        const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+        if (!user) {
+            return res.status(401).send("Houve algum problema user");
+        }
+
+        const registers = await db.collection('transactions').find({ userId: new ObjectId(userId) }).toArray();
+
+        return res.status(200).send({ name: user.name, registers });
+    } catch (error) {
+        res.status(500).send(error);
+    }
+});
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Servidor funcionando na porta ${PORT}`));
