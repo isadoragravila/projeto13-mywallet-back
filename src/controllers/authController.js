@@ -58,3 +58,14 @@ export async function signInUser (req, res) {
         res.status(500).send(error);
     }
 }
+
+export async function deleteToken (req, res) {
+    try {
+        const token = res.locals.token;
+        await db.collection('sessions').deleteOne({ token });
+        return res.status(201).send("Token deletado com sucesso!")
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}
