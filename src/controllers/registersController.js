@@ -2,23 +2,11 @@ import { db, objectId } from '../databases/mongo.js';
 import joi from 'joi';
 import dayjs from 'dayjs';
 
-export async function getRegisters (req, res) {
+export async function getRegisters(req, res) {
     try {
-        const { authorization } = req.headers;
-        const token = authorization?.replace('Bearer ', '');
+        const user = res.locals.user;
 
-        const session = await db.collection('sessions').findOne({ token });
-        if (!session) {
-            return res.status(401).send("Houve algum problema session");
-        }
-
-        const userId = session.userId;
-        const user = await db.collection('users').findOne({ _id: new objectId(userId) });
-        if (!user) {
-            return res.status(401).send("Houve algum problema user");
-        }
-
-        const registers = await db.collection('transactions').find({ userId: new objectId(userId) }).toArray();
+        const registers = await db.collection('transactions').find({ userId: new objectId(user._id) }).toArray();
 
         return res.status(200).send({ name: user.name, registers });
     } catch (error) {
@@ -26,7 +14,7 @@ export async function getRegisters (req, res) {
     }
 }
 
-export async function postRegisters (req, res) {
+export async function postRegisters(req, res) {
     //validação do formato do objeto vindo do body
     const registerSchema = joi.object({
         type: joi.string().valid("inflow", "outflow").required(),
@@ -39,25 +27,12 @@ export async function postRegisters (req, res) {
     }
 
     try {
-        //recebe o token e verifica se tem sessão e usuário relacionados
-        const { authorization } = req.headers;
-        const token = authorization?.replace('Bearer ', '');
+        const user = res.locals.user;
 
-        const session = await db.collection('sessions').findOne({ token });
-        if (!session) {
-            return res.status(401).send("Houve algum problema session");
-        }
-
-        const userId = session.userId;
-        const user = await db.collection('users').findOne({ _id: new objectId(userId) });
-        if (!user) {
-            return res.status(401).send("Houve algum problema user");
-        }
-        //insere o registro na coleção transactions
         const { type, description, value } = req.body;
         const date = dayjs().format('DD/MM');
 
-        const register = { type, description, value: Number(value), date, userId };
+        const register = { type, description, value: Number(value), date, userId: user._id };
 
         await db.collection('transactions').insertOne(register);
 
