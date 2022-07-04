@@ -19,7 +19,7 @@ export async function postRegisters(req, res) {
     const registerSchema = joi.object({
         type: joi.string().valid("inflow", "outflow").required(),
         description: joi.string().required(),
-        value: joi.number().required()
+        value: joi.number().greater(0).required()
     });
     const validation = registerSchema.validate(req.body);
     if (validation.error) {
@@ -58,7 +58,7 @@ export async function editRegister(req, res) {
 
     const registerSchema = joi.object({
         description: joi.string().required(),
-        value: joi.number().required()
+        value: joi.number().greater(0).required()
     });
     const validation = registerSchema.validate(req.body);
     if (validation.error) {
