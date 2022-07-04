@@ -69,7 +69,7 @@ export async function editRegister(req, res) {
     try {
         await db.collection('transactions').updateOne(
             { _id: new objectId(id) },
-            { $set: { description, value }});
+            { $set: { description, value: Number(value) }});
         return res.sendStatus(200);
 
     } catch (error) {
