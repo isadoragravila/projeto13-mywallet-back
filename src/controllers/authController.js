@@ -3,8 +3,7 @@ import { v4 as uuid } from 'uuid';
 import { db } from '../databases/mongo.js';
 import joi from 'joi';
 
-export async function signUpUser (req, res) {
-    //validação do formato do objeto vindo do body
+export async function signUpUser(req, res) {
     const userSchema = joi.object({
         name: joi.string().required(),
         email: joi.string().email().required(),
@@ -16,7 +15,6 @@ export async function signUpUser (req, res) {
     }
 
     try {
-        //verificação se já existe alguém utilizando o email
         const { email, password } = req.body;
         const verifyEmail = await db.collection('users').findOne({ email });
         if (verifyEmail) {
@@ -32,8 +30,7 @@ export async function signUpUser (req, res) {
     }
 }
 
-export async function signInUser (req, res) {
-    //validação do formato do objeto vindo do body
+export async function signInUser(req, res) {
     const userSchema = joi.object({
         email: joi.string().email().required(),
         password: joi.string().required()
@@ -46,7 +43,7 @@ export async function signInUser (req, res) {
     try {
         const { email, password } = req.body;
         const user = await db.collection('users').findOne({ email });
-        //verificação email e senha, criação do token e armazenar sessão
+
         if (user && bcrypt.compareSync(password, user.password)) {
             const token = uuid();
             await db.collection('sessions').insertOne({ userId: user._id, token });
@@ -59,7 +56,7 @@ export async function signInUser (req, res) {
     }
 }
 
-export async function deleteToken (req, res) {
+export async function deleteToken(req, res) {
     try {
         const token = res.locals.token;
         await db.collection('sessions').deleteOne({ token });

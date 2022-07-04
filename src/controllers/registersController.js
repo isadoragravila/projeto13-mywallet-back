@@ -15,7 +15,6 @@ export async function getRegisters(req, res) {
 }
 
 export async function postRegisters(req, res) {
-    //validação do formato do objeto vindo do body
     const registerSchema = joi.object({
         type: joi.string().valid("inflow", "outflow").required(),
         description: joi.string().required(),
@@ -69,7 +68,7 @@ export async function editRegister(req, res) {
     try {
         await db.collection('transactions').updateOne(
             { _id: new objectId(id) },
-            { $set: { description, value: Number(value) }});
+            { $set: { description, value: Number(value) } });
         return res.sendStatus(200);
 
     } catch (error) {
