@@ -45,14 +45,31 @@ export async function postRegisters(req, res) {
 export async function deleteRegister(req, res) {
     const id = req.params.id;
     try {
-        const user = res.locals.user;
-        const registerId = await db.collection('transactions').findOne({ _id: new objectId(id), userId: new objectId(user._id) });
-
-        if (!registerId) {
-            return res.status(404).send("Deu ruim na hora de apagar!");
-        }
-
         await db.collection('transactions').deleteOne({ _id: new objectId(id) });
+        return res.sendStatus(200);
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}
+
+export async function editRegister(req, res) {
+    const id = req.params.id;
+
+    const registerSchema = joi.object({
+        description: joi.string().required(),
+        value: joi.number().required()
+    });
+    const validation = registerSchema.validate(req.body);
+    if (validation.error) {
+        return res.status(422).send("Todos os campos são obrigatórios!");
+    }
+    const { description, value } = req.body;
+
+    try {
+        await db.collection('transactions').updateOne(
+            { _id: new objectId(id) },
+            { $set: { description, value }});
         return res.sendStatus(200);
 
     } catch (error) {
